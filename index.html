@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Suraj Shrestha | Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body onload="getRepos()">
+
+<div id="loading-content">
+    <span id="loading">Loading</span>
+</div>
+
+<div class="main" id="mainContainer" hidden>
+
+    <div class="profileDetails">
+        <img class="profile-img" id="profileImage" alt="Profile Image">
+        <h1 id="fullName"></h1>
+        <h2 id="followersInformation"></h2>
+        <h4 id="bio"></h4>
+    </div>
+
+    <div class="projectDetails">
+        <div class="vertical-list ">
+            <a href="#" class="active">My Projects - <span id="totalRepos"></span></a>
+            <a><div id="divResult"></div></a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Check me on:</p>
+        <ul>
+            <li>
+                <a id="githubLink" target="_blank">
+                    <i class="fa fa-github-square" aria-hidden="true"></i>
+                </a>
+            </li>
+
+            <li>
+                <a href="https://twitter.com/explore" target="_blank">
+                    <i class="fa fa-twitter-square" aria-hidden="true"></i>
+                </a>
+            </li>
+
+            <li>
+                <a href="https://www.linkedin.com/in/suraj-shrestha-56344b16b" target="_blank">
+                    <i class="fa fa-linkedin-square" aria-hidden="true"></i>
+                </a>
+            </li>
+
+        </ul>
+    </div>
+
+</div>
+<script>
+    let el = document.getElementById('loading'),
+        i = 0,
+        load = setInterval(function () {
+            i = ++i % 4;
+            el.innerHTML = 'Loading' + Array(i + 1).join('.');
+        }, 600);
+
+    fetch("https://api.github.com/users/surajshrestha-0")
+        .then(response => response.json())
+        .then(function (data) {
+
+            let followerCounts = data['followers']
+            let followerInfo = `Followers - ${followerCounts}`
+            document.getElementById('profileImage').src = data['avatar_url']
+            document.getElementById('fullName').textContent = data['name']
+            document.getElementById('bio').textContent = data['bio']
+            document.getElementById('followersInformation').textContent = followerInfo
+            document.getElementById('githubLink').href = data['html_url']
+            document.getElementById('totalRepos').textContent = data['public_repos']
+            document.getElementById('loading-content').hidden = true
+            document.getElementById('mainContainer').hidden = false
+        })
+
+    const divResult = document.getElementById("divResult")
+
+    // display per is set to 1 project per page
+    async function getRepos(url="https://api.github.com/users/surajshrestha-0/repos?per_page=1") {
+        clear();
+        const response = await fetch(url)
+        const link = response.headers.get("link")
+        const links = link.split(",")
+        const urls = links.map(a=> {
+            return {
+                url: a.split(";")[0].replace(">","").replace("<",""),
+                title:a.split(";")[1].split('"')[1]
+            }
+
+        })
+
+        const result = await response.json()
+        result.forEach(i=>{
+            console.log(i)
+            const anchor = document.createElement("a")
+            anchor.href = i.html_url;
+            anchor.textContent = i.full_name.slice(16);
+            document.getElementById("divResult").appendChild(anchor)
+            document.getElementById("divResult").appendChild(document.createElement("br"))
+        })
+
+
+        urls.forEach(u => {
+            const btn = document.createElement("button")
+            btn.textContent = u.title;
+            btn.addEventListener("click", e=> getRepos(u.url))
+            divResult.appendChild(btn);
+        })
+
+    }
+
+    function clear(){
+        while(divResult.firstChild)
+            divResult.removeChild(divResult.firstChild)
+    }
+</script>
+
+<script src="https://use.fontawesome.com/d1341f9b7a.js"></script>
+</body>
+
+</body>
+</html>
