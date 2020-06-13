@@ -2,16 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="portfolio, github api to list out all user repos, pagination technique to fetch all user repos">
+    <meta name="keywords" content="Suraj Shrestha Portfolio">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="userIcon.png">
+
     <title>Suraj Shrestha | Portfolio</title>
+
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body onload="getRepos()">
 
 <div id="loading-content">
     <span id="loading">Loading</span>
 </div>
 
-<div class="main" id="mainContainer" hidden>
+<section class="main" id="mainContainer" hidden>
 
     <div class="profileDetails">
         <img class="profile-img" id="profileImage" alt="Profile Image">
@@ -23,8 +30,9 @@
     <div class="projectDetails">
         <div class="vertical-list ">
             <a href="#" class="active">My Projects - <span id="totalRepos"></span></a>
-            <a><div id="divResult"></div></a>
+            <a><div id="divResult" title="View Project"></div></a>
         </div>
+        <div  class="pager" id="pager"></div>
     </div>
 
     <div class="footer">
@@ -51,7 +59,7 @@
         </ul>
     </div>
 
-</div>
+</section>
 <script>
     let el = document.getElementById('loading'),
         i = 0,
@@ -60,6 +68,7 @@
             el.innerHTML = 'Loading' + Array(i + 1).join('.');
         }, 600);
 
+    //collecting user details
     fetch("https://api.github.com/users/surajshrestha-0")
         .then(response => response.json())
         .then(function (data) {
@@ -77,13 +86,16 @@
         })
 
     const divResult = document.getElementById("divResult")
+    const pager = document.getElementById("pager")
 
-    // display per is set to 1 project per page
+    //retrieve user repos list and displaying 1 project per page (using ?per_page parameter)
     async function getRepos(url="https://api.github.com/users/surajshrestha-0/repos?per_page=1") {
-        clear();
+        clearList();
         const response = await fetch(url)
+        //Link header values for pagination instead of constructing own URLs.
         const link = response.headers.get("link")
         const links = link.split(",")
+        //split link header values for pagination URLs.
         const urls = links.map(a=> {
             return {
                 url: a.split(";")[0].replace(">","").replace("<",""),
@@ -94,32 +106,37 @@
 
         const result = await response.json()
         result.forEach(i=>{
-            console.log(i)
             const anchor = document.createElement("a")
             anchor.href = i.html_url;
+            //slice used to display only projects name (as return value for full_name:"surajshrestha-0/project_name")
             anchor.textContent = i.full_name.slice(16);
             document.getElementById("divResult").appendChild(anchor)
             document.getElementById("divResult").appendChild(document.createElement("br"))
         })
 
-
+        // creating button for each url obtained from link header
         urls.forEach(u => {
             const btn = document.createElement("button")
             btn.textContent = u.title;
             btn.addEventListener("click", e=> getRepos(u.url))
-            divResult.appendChild(btn);
+            btn.addEventListener("click", e=> clearButton())
+            pager.appendChild(btn);
         })
 
     }
 
-    function clear(){
+    //Clear function if an child exist
+    function clearList(){
         while(divResult.firstChild)
             divResult.removeChild(divResult.firstChild)
     }
+
+    function clearButton(){
+        while(pager.firstChild)
+            pager.removeChild(pager.firstChild)
+    }
 </script>
-
+<!--font Awesome-->
 <script src="https://use.fontawesome.com/d1341f9b7a.js"></script>
-</body>
-
 </body>
 </html>
